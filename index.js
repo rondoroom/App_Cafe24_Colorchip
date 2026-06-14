@@ -8,10 +8,37 @@ const CLIENT_ID = process.env.CAFE24_CLIENT_ID;
 const CLIENT_SECRET = process.env.CAFE24_CLIENT_SECRET;
 const REDIRECT_URI = process.env.CAFE24_REDIRECT_URI;
 
+// 카페24 개발자센터 "권한선택"에서 체크한 항목과 맞춰야 함
+// - 상품(Product) 읽기권한      -> mall.read_product
+// - 디자인(Design) 읽기+쓰기권한 -> mall.read_design, mall.write_design
+const SCOPES = [
+  'mall.read_product',
+  'mall.read_design',
+  'mall.write_design'
+].join(',');
+
 // ===========================================================
-// 1. 기본 페이지 (서버가 살아있는지 확인용)
+// 1. 기본 페이지 (App URL)
+// 카페24 관리자가 앱을 클릭하면 mall_id와 함께 이 주소로 들어옴
+// -> 카페24의 "권한 동의" 화면으로 보내줘야 함
 // ===========================================================
 app.get('/', (req, res) => {
+  const { mall_id } = req.query;
+
+  if (mall_id) {
+    const authUrl = `https://${mall_id}.cafe24api.com/api/v2/oauth/authorize` +
+      `?response_type=code` +
+      `&client_id=${CLIENT_ID}` +
+      `&state=${mall_id}` +
+      `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}` +
+      `&scope=${encodeURIComponent(SCOPES)}`;
+
+    console.log('=== 권한 동의 화면으로 이동 ===');
+    console.log(authUrl);
+
+    return res.redirect(authUrl);
+  }
+
   res.send('색상칩 앱 서버가 정상적으로 동작 중입니다.');
 });
 
